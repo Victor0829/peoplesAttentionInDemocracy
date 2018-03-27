@@ -1,3 +1,4 @@
+
 var svg = d3.select("svg")
             .attr("width", 1080)
             .attr("height", 1260);
@@ -827,8 +828,8 @@ d3.csv("Average_Data.csv", function(d, i, columns) {
 
   var keys = data.columns.slice(1,8);
 
-  data.sort(function(a, b) { return b.total - a.total; });
-  x2.domain(data.map(function(d) { return d.year; }));
+//  data.sort(function(a, b) { return b.total - a.total; });
+  x2.domain(data.map(function(d) { return 3800 - d.year; }));
   y2.domain([0, d3.max(data, function(d) { return d.total; })]).nice();
   z2.domain(keys);
 
