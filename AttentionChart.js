@@ -1,15 +1,21 @@
-
 var svg = d3.select("svg")
             .attr("width", 1080)
-            .attr("height", 1260);
+            .attr("height", 1060);
 
-var margin = {top: 100, right: 80, bottom: 480, left: 150},
-    margin2 = {top: 700, right: 80, bottom: 30, left: 150},
+var margin = {top: 50, right: 80, bottom: 480, left: 150},
+    margin2 =  { top: 480, right: 80, bottom: 200, left: 200 },
+    marginOverview = { top: 580, right: 400, bottom: 430,  left: 400 },
+    
     width = svg.attr("width") - margin.left - margin.right,
+    width2 = svg.attr("width") - margin2.left - margin2.right,
     height = svg.attr("height") - margin.top - margin.bottom,
     height2 = svg.attr("height") - margin2.top - margin2.bottom,
-    g = svg.append("g").attr("transform", "translate(" + margin.left + "," +margin.top + ")"),
-    g2 = svg.append("g2").attr("transform", "translate(" + margin2.left + "," +margin2.top + ")");
+    
+    heightOverview = svg.attr("height") - marginOverview.top - marginOverview.bottom,
+    widthOverview = svg.attr("width") - marginOverview.left - marginOverview.right,
+    
+    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
 
 //color Def
 var usBlue = "#99bbff", chiRed = "#ee4444", hebGreen = "#22aa22", rusDarkBlue = "#222299", spaYellow = "#ffaa33";
@@ -31,16 +37,33 @@ var x = d3.scaleTime().range([0, width]),
     //color scale
     z_bar = d3.scaleOrdinal(d3.schemeCategory10);
 
-var x2 = d3.scaleBand()
-    .rangeRound([width,0])
-    .paddingInner(0.05)
-    .align(0.1);
 
-var y2 = d3.scaleLinear()
-    .rangeRound([height2 * 0.7, 0]);
+// **********
+// mathematical scales for the x2 and y2 axes
+var x2 = d3.scaleTime().range([0, width2]);
+var y2 = d3.scaleLinear().range([height2, 0]);
+var xOverview = d3.scaleTime().range([0, widthOverview]);                   
+var yOverview = d3.scaleLinear().range([heightOverview, 0]);                    
 
-var z2 = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00","#ff7567"]);
+var colour = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00","#ff7567"]);
+
+
+// something for us to render the chart into
+
+var main = svg.append("g")
+              .attr("class", "main")
+//              .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")")
+              .attr("transform", "translate(142,500)");
+var overview = svg.append("g")
+                  .attr("class", "overview")
+                  .attr("transform", "translate(" + 1.07 * marginOverview.left + "," + marginOverview.top + ")");
+
+// brush tool to let us zoom and pan using the overview chart
+var brush = d3.brushX()                // Initiate the brushX() 
+    .extent([[0, 0], [widthOverview, heightOverview]])  // [0,0] means the distance between the top-margin of the gray shadow and that of the chart
+    .on("brush end", brushed);
+
+// **********
 
 
 var stack = d3.stack();
@@ -292,10 +315,10 @@ function printPath_Chinese(data) {
                         + "Liberty : " + formatComma(d.liberty) + "<br/>"
                         + "Justice : " + formatComma(d.justice) + "<br/>"
                         + "Equality : " + formatComma(d.equality) + "<br/>"
-                        + "Rights : " + commaFormat(d.rights) + "<br/>" 
-                        + "Election : " + commaFormat(d.election) + "<br/>"
-                        + "Citizen : " + commaFormat(d.citizen) + "<br/>"
-                        + "Protests : " + commaFormat(d.protests)
+                        + "Rights : " + formatComma(d.rights) + "<br/>" 
+                        + "Election : " + formatComma(d.election) + "<br/>"
+                        + "Citizen : " + formatComma(d.citizen) + "<br/>"
+                        + "Protests : " + formatComma(d.protests)
                 )
                         .style("left", (d3.event.pageX + 30) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
@@ -335,14 +358,14 @@ function printPath_Hebrew(data) {
                     .style("opacity", 0.9);
                 div.html(
                         d.language + "<br/>" 
-                        + "Democracy : " + commaFormat(d.democracy) + "<br/>"
-                        + "Liberty : " + commaFormat(d.liberty) + "<br/>"
-                        + "Justice : " + commaFormat(d.justice) + "<br/>"
-                        + "Equality : " + commaFormat(d.equality) + "<br/>"
-                        + "Rights : " + commaFormat(d.rights) + "<br/>" 
-                        + "Election : " + commaFormat(d.election) + "<br/>"
-                        + "Citizen : " + commaFormat(d.citizen) + "<br/>"
-                        + "Protests : " + commaFormat(d.protests)
+                        + "Democracy : " + formatComma(d.democracy) + "<br/>"
+                        + "Liberty : " + formatComma(d.liberty) + "<br/>"
+                        + "Justice : " + formatComma(d.justice) + "<br/>"
+                        + "Equality : " + formatComma(d.equality) + "<br/>"
+                        + "Rights : " + formatComma(d.rights) + "<br/>" 
+                        + "Election : " + formatComma(d.election) + "<br/>"
+                        + "Citizen : " + formatComma(d.citizen) + "<br/>"
+                        + "Protests : " + formatComma(d.protests)
                 )
                         .style("left", (d3.event.pageX + 30) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
@@ -383,13 +406,13 @@ function printPath_Russian(data) {
                 div.html(
                         d.language + "<br/>" 
                         + "Democracy : " + formatComma(d.democracy) + "<br/>"
-                        + "Liberty : " + commaFormat(d.liberty) + "<br/>"
-                        + "Justice : " + commaFormat(d.justice) + "<br/>"
-                        + "Equality : " + commaFormat(d.equality) + "<br/>"
-                        + "Rights : " + commaFormat(d.rights) + "<br/>" 
-                        + "Election : " + commaFormat(d.election) + "<br/>"
-                        + "Citizen : " + commaFormat(d.citizen) + "<br/>"
-                        + "Protests : " + commaFormat(d.protests)
+                        + "Liberty : " + formatComma(d.liberty) + "<br/>"
+                        + "Justice : " + formatComma(d.justice) + "<br/>"
+                        + "Equality : " + formatComma(d.equality) + "<br/>"
+                        + "Rights : " + formatComma(d.rights) + "<br/>" 
+                        + "Election : " + formatComma(d.election) + "<br/>"
+                        + "Citizen : " + formatComma(d.citizen) + "<br/>"
+                        + "Protests : " + formatComma(d.protests)
                 )
                         .style("left", (d3.event.pageX + 30) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
@@ -429,14 +452,14 @@ function printPath_Spanish(data) {
                     .style("opacity", 0.9);
                 div.html(
                         d.language + "<br/>" 
-                        + "Democracy " + commaFormat(d.democracy) + "<br/>"
-                        + "Liberty : " + commaFormat(d.liberty) + "<br/>"
-                        + "Justice : " + commaFormat(d.justice) + "<br/>"
-                        + "Equality : " + commaFormat(d.equality) + "<br/>"
-                        + "Rights : " + commaFormat(d.rights) + "<br/>" 
-                        + "Election : " + commaFormat(d.election) + "<br/>"
-                        + "Citizen : " + commaFormat(d.citizen) + "<br/>"
-                        + "Protests : " + commaFormat(d.protests)
+                        + "Democracy " + formatComma(d.democracy) + "<br/>"
+                        + "Liberty : " + formatComma(d.liberty) + "<br/>"
+                        + "Justice : " + formatComma(d.justice) + "<br/>"
+                        + "Equality : " + formatComma(d.equality) + "<br/>"
+                        + "Rights : " + formatComma(d.rights) + "<br/>" 
+                        + "Election : " + formatComma(d.election) + "<br/>"
+                        + "Citizen : " + formatComma(d.citizen) + "<br/>"
+                        + "Protests : " + formatComma(d.protests)
                 )
                         .style("left", (d3.event.pageX + 30) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
@@ -617,7 +640,7 @@ d3.queue()
     ]);
     y_percent.domain([
         0,
-        d3.max(array_maxPercentOfList)
+        d3.max(array_maxPercentOfList)*0.94
     ]);
 
     
@@ -818,78 +841,116 @@ d3.queue()
 });
 
 
-//
-d3.csv("Average_Data.csv", function(d, i, columns) {
-  for (i = 1, t = 0; i < columns.length; ++i) t += d[columns[i]] = +d[columns[i]];
-    d.total = t;
-    return d;
-    }, function(error, data) {
-  if (error) throw error;
 
-  var keys = data.columns.slice(1,8);
+// **********
+d3.csv("Average_Data.csv", parse, function(data) {
+    var keys = data.columns.slice(1);
+    // data ranges for the x and y axes
+    x2.domain(d3.extent(data, function(d) { return d.year; }));
+    y2.domain([0, d3.max(data, function(d) { return d.total; })]);
+    xOverview.domain(x2.domain());
+    yOverview.domain(y2.domain());
 
-//  data.sort(function(a, b) { return b.total - a.total; });
-  x2.domain(data.map(function(d) { return 3800 - d.year; }));
-  y2.domain([0, d3.max(data, function(d) { return d.total; })]).nice();
-  z2.domain(keys);
+    // data range for the bar colours
+    // (essentially maps attribute names to colour values)
+    colour.domain(d3.keys(data[0]));
 
-  g.append("g")
-    .selectAll("g")
-    .data(d3.stack().keys(keys)(data))
-    .enter().append("g")
-      .attr("fill", function(d) { return z2(d.key); })
-    .selectAll("rect")
-    .data(function(d) { return d; })
-    .enter().append("rect")
-    .attr("transform", "translate(0,729)")
-      .attr("x", function(d) { return x2(d.data.year); })
-      .attr("y", function(d) { return y2(d[1]); })
-      .attr("height", function(d) { return y2(d[0]) - y2(d[1]); })
-      .attr("width", x2.bandwidth());
+    // draw the axes now that they are fully set up
+    main.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(8,500)")
+        .call(d3.axisBottom(x2));
+    main.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(8,120)")
+        .call(d3.axisRight(y2));
+    overview.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + heightOverview + ")")
+        .call(d3.axisBottom(xOverview));
+    
+    main.append("defs").append("clipPath")       // Make sure that the blue area will not appear on the left side of YAxis
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
 
-  g.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0,1100)")
-      .call(d3.axisBottom(x2));
+    // draw the bars
+    main.append("g")
+        .attr("class", "bars")
+        // a group for each stack of bars, positioned in the correct x position
+        .selectAll(".bar.stack")
+        .data(data)
+        .enter().append("g")
+        .attr("class", "bar stack")
+        .attr("transform", function(d) { return "translate(" + x2(d.year) + ",120)"; })
+          
+        // a bar for each value in the stack, positioned in the correct y positions
+        .selectAll("rect")
+        .data(function(d) { return d.words; })
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("width", 25)
+        .attr("y", function(d) { return y2(d.y1); })
+        .attr("height", function(d) { return y2(d.y0) - y2(d.y1); })
+        .style("fill", function(d) { return colour(d.name); })
+    
+    main.append("text")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "start")
+        .style("font-size", "20px") 
+        .text("Word Distribution in All Language (Average)")
+        .attr("transform", "translate(250,110)");
 
-  g.append("g")
-      .attr("class", "axis")
-      .call(d3.axisLeft(y2).ticks(null, "s"))
-    .attr("transform", "translate(0,729)")
-    .append("text")
-     .attr("transform", "translate(240,0)")
-      .attr("x", 2)
-      .attr("y", y2(y2.ticks().pop()) + 0.5)
-      .attr("dy", "0.32em") 
-      .attr("fill", "brown")
-      .attr("font-weight", "bold")
-      .attr("text-anchor", "start")
-      .style("font-size", "20px") 
-      .text("Word Distribution in All Language (Average)");
+    overview.append("g")
+            .attr("class", "bars")
+            .selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function(d) { return xOverview(d.year) - 3; })
+            .attr("width", 12)
+            .attr("y", function(d) { return yOverview(d.total); })
+            .attr("height", function(d) { return heightOverview - yOverview(d.total); });
 
-  var legend = g.append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10)
-  .attr("transform", "translate(-750,720)")
-      .attr("text-anchor", "end")
-    .selectAll("g")
-    .data(keys.slice().reverse())
-    .enter().append("g")
-      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+    // add the brush target area on the overview chart
+    overview.append("g")
+            .attr("class", "x brush")
+            .call(brush)
+            .selectAll("rect")
+            // -6 is magic number to offset positions for styling/interaction to feel right
+            .attr("y", -6)
+            // need to manually set the height because the brush has
+            // no y scale, i.e. we should see the extent being marked
+            // over the full height of the overview chart
+            .attr("height", heightOverview + 7);  // +7 is magic number for styling
+    
+    var legend = g.append("g")
+                  .attr("font-family", "sans-serif")
+                  .attr("font-size", 10)
+                  .attr("transform", "translate(-700,570)")
+                  .attr("text-anchor", "end")
+                  .selectAll("g")
+                  .data(keys.slice().reverse())
+                  .enter().append("g")
+                  .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-  legend.append("rect")
-      .attr("x", width - 19)
-      .attr("width", 19)
-      .attr("height", 19)
-      .attr("fill", z2);
+    legend.append("rect")
+          .attr("x", width - 19)
+          .attr("width", 19)
+          .attr("height", 19)
+          .attr("fill", colour);
 
-  legend.append("text")
-      .attr("x", width - 24)
-      .attr("y", 9.5)
-      .attr("dy", "0.32em")
-      .text(function(d) { return d; });
+    legend.append("text")
+          .attr("x", width - 24)
+          .attr("y", 9.5)
+          .attr("dy", "0.32em")
+          .text(function(d) { return d; });
 });
-//
+
+
+// **********
+
 
 
 //bind with multiseries data
@@ -922,3 +983,37 @@ function findMaxPercent(data) {
     });
     return d3.max(maxValues); 
 }
+
+// **********
+// by habit, cleaning/parsing the data and return a new object to ensure/clarify data object structure
+function parse(d) {
+    var value = { year: parseDate(d.year) }; // turn the date string into a date object
+
+    // adding calculated data to each count in preparation for stacking
+    var y0 = 0; // keeps track of where the "previous" value "ended""
+    value.words = ["democracy","liberty","justice","equality","rights","election","citizen","protests"].map(function(name) {
+        return { name: name,
+                 y0: y0,
+                 // add this count on to the previous "end" to create a range, and update the "previous end" for the next iteration
+                 y1: y0 += +d[name]
+               };
+    });
+    // quick way to get the total from the previous calculations
+    value.total = value.words[value.words.length - 1].y1;
+    return value;
+}
+
+// zooming/panning behaviour for overview chart
+function brushed(data) {
+    var selection = d3.event.selection;
+    // update the main chart's x axis data range
+    x2.domain(selection.map(xOverview.invert, xOverview));
+    // redraw the bars on the main chart
+    main.selectAll(".bar.stack")
+        .attr("transform", function(d) {
+            return "translate(" + x2(d.year) +",120)"; 
+        });
+    // redraw the x2 axis of the main chart
+    main.select(".x.axis").call(d3.axisBottom(x2));
+}
+// **********

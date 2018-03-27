@@ -1,6 +1,6 @@
 .line {
     fill: none;
-    stroke-width: 4px;
+    stroke-width: 3px;
     shape-rendering: geometricPrecision;
 }
 
@@ -21,4 +21,36 @@
 
 .axis.domain {
   display: none;
+}
+
+.axis path,
+.axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+}
+
+.brush .selection {
+      stroke: #fff;
+      fill-opacity: .225;
+      shape-rendering: crispEdges;
+}
+
+
+.main {
+  fill: none;
+  clip-path: url(#clip);     /* Make sure that the blue area will not appear on the left side of YAxis */
+}
+
+.brush .extent {
+      fill-opacity: .125;
+      shape-rendering: crispEdges;
+    }
+
+.resize {
+  display: inline !important; /* show when empty */
+  fill: #7A7A7A;
+  fill-opacity: 1;
+  stroke: #7A7A7A;
+  stroke-width: 2px;
 }
